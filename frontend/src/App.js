@@ -11,6 +11,8 @@ const App = () => {
   const [jobResults, setJobResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [searchKeywords, setSearchKeywords] = useState('');
+  const [totalFound, setTotalFound] = useState(0);
 
   return (
     <Router>
@@ -27,6 +29,8 @@ const App = () => {
                 setJobResults={setJobResults}
                 setLoading={setLoading}
                 setError={setError}
+                setSearchKeywords={setSearchKeywords}
+                setTotalFound={setTotalFound}
               />
             }
           />
@@ -38,6 +42,8 @@ const App = () => {
                 setJobResults={setJobResults}
                 setLoading={setLoading}
                 setError={setError}
+                setSearchKeywords={setSearchKeywords}
+                setTotalFound={setTotalFound}
               />
             }
           />
@@ -49,6 +55,8 @@ const App = () => {
                 jobs={jobResults}
                 loading={loading}
                 error={error}
+                searchKeywords={searchKeywords}
+                totalFound={totalFound}
               />
             }
           />

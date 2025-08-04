@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/ResumeUpload.css';
 
-const ResumeUpload = ({ setJobResults, setLoading, setError }) => {
+const ResumeUpload = ({ setJobResults, setLoading, setError, setSearchKeywords, setTotalFound }) => {
   const [fileName, setFileName] = useState('');
   const [uploading, setUploading] = useState(false);
   const navigate = useNavigate();
@@ -16,35 +16,47 @@ const ResumeUpload = ({ setJobResults, setLoading, setError }) => {
     }
 
     const uploadFile = async (file) => {
-    const formData = new FormData();
-    formData.append('resume', file);
+      const formData = new FormData();
+      formData.append('resume', file);
 
-    try {
-      setLoading(true);
-      setUploading(true);
-      setError('');
+      try {
+        setLoading(true);
+        setUploading(true);
+        setError('');
 
-      const response = await axios.post('http://localhost:5000/api/analyze-resume', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+        const response = await axios.post('http://localhost:5001/api/analyze-resume', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
 
-      setJobResults(response.data.jobs || []);
-      navigate('/results');
-    } catch (err) {
-      console.error(err);
-      setError('Failed to analyze resume. Please try again.');
-    } finally {
-      setLoading(false);
-      setUploading(false);
-    }
-  };
+        if (response.data.success) {
+          setJobResults(response.data.jobs || []);
+          setSearchKeywords(response.data.search_keywords || 'Resume Analysis');
+          setTotalFound(response.data.total_found || 0);
+          navigate('/results');
+        } else {
+          setError('Failed to analyze resume. Please try again.');
+        }
+      } catch (err) {
+        console.error('Resume upload error:', err);
+        if (err.response?.status === 404) {
+          setError('Resume analysis endpoint not found. Please check if the backend is running.');
+        } else if (err.code === 'ECONNREFUSED') {
+          setError('Cannot connect to backend server. Please ensure it\'s running on port 5001.');
+        } else {
+          setError('Failed to analyze resume. Please try again.');
+        }
+      } finally {
+        setLoading(false);
+        setUploading(false);
+      }
+    };
 
     const file = acceptedFiles[0];
     setFileName(file.name);
     uploadFile(file);
-  },[setError, setLoading, setUploading, setJobResults, navigate]);
+  }, [setError, setLoading, setUploading, setJobResults, setSearchKeywords, setTotalFound, navigate]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
@@ -55,11 +67,12 @@ const ResumeUpload = ({ setJobResults, setLoading, setError }) => {
     onDrop,
   });
 
-  
-
   return (
     <div className="resume-upload">
       <h2>Upload Your Resume</h2>
+      <p className="upload-description">
+        Upload your resume to get personalized job recommendations based on your skills and experience.
+      </p>
 
       <div {...getRootProps()} className={`dropzone ${isDragActive ? 'active' : ''}`}>
         <input {...getInputProps()} />
@@ -70,7 +83,12 @@ const ResumeUpload = ({ setJobResults, setLoading, setError }) => {
         )}
       </div>
 
-      {uploading && <p className="loading">Uploading...</p>}
+      {uploading && (
+        <div className="upload-status">
+          <div className="loading-spinner"></div>
+          <p className="loading">Analyzing your resume...</p>
+        </div>
+      )}
       {fileName && !uploading && <p className="filename">Uploaded: {fileName}</p>}
     </div>
   );

@@ -1,6 +1,20 @@
 .resume-upload {
   text-align: center;
   padding: 2rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.resume-upload h2 {
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.upload-description {
+  color: #666;
+  margin-bottom: 2rem;
+  font-size: 1rem;
+  line-height: 1.5;
 }
 
 .dropzone {
@@ -14,8 +28,41 @@
   transition: background-color 0.3s ease;
 }
 
+.dropzone:hover {
+  background-color: #f0f0ff;
+}
+
 .dropzone.active {
   background-color: #e8e8ff;
+  border-color: #5a52d5;
+}
+
+.dropzone p {
+  margin: 0;
+  color: #666;
+  font-size: 1rem;
+}
+
+.upload-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.loading-spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #6c63ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 0.5rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .filename,
@@ -23,4 +70,22 @@
   margin-top: 1rem;
   font-weight: bold;
   color: #555;
+}
+
+.filename {
+  color: #28a745;
+}
+
+.loading {
+  color: #6c63ff;
+}
+
+@media (max-width: 768px) {
+  .resume-upload {
+    padding: 1rem;
+  }
+  
+  .dropzone {
+    padding: 1.5rem;
+  }
 }
