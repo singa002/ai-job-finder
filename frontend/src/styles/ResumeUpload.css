@@ -1,0 +1,26 @@
+.resume-upload {
+  text-align: center;
+  padding: 2rem;
+}
+
+.dropzone {
+  border: 2px dashed #6c63ff;
+  padding: 2rem;
+  border-radius: 8px;
+  background-color: #fafafa;
+  cursor: pointer;
+  margin: 1rem auto;
+  max-width: 400px;
+  transition: background-color 0.3s ease;
+}
+
+.dropzone.active {
+  background-color: #e8e8ff;
+}
+
+.filename,
+.loading {
+  margin-top: 1rem;
+  font-weight: bold;
+  color: #555;
+}

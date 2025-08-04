@@ -1,25 +1,61 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import SearchOptions from './components/SearchOptions';
+import ResumeUpload from './components/ResumeUpload';
+import TextSearch from './components/TextSearch';
+import JobResults from './components/JobResults';
+import './styles/App.css';
 
-function App() {
+const App = () => {
+  // Centralized state for job results, loading, and error handling
+  const [jobResults, setJobResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <div className="app-container">
+        <h1>AI Job Finder</h1>
+
+        <Routes>
+          <Route path="/" element={<SearchOptions />} />
+
+          <Route
+            path="/resume-upload"
+            element={
+              <ResumeUpload
+                setJobResults={setJobResults}
+                setLoading={setLoading}
+                setError={setError}
+              />
+            }
+          />
+
+          <Route
+            path="/text-search"
+            element={
+              <TextSearch
+                setJobResults={setJobResults}
+                setLoading={setLoading}
+                setError={setError}
+              />
+            }
+          />
+
+          <Route
+            path="/results"
+            element={
+              <JobResults
+                jobs={jobResults}
+                loading={loading}
+                error={error}
+              />
+            }
+          />
+        </Routes>
+      </div>
+    </Router>
   );
-}
+};
 
 export default App;

@@ -1,0 +1,46 @@
+/* App layout */
+.app-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+  color: #333;
+}
+
+/* Heading */
+h1 {
+  text-align: center;
+  font-size: 2.2rem;
+  margin-bottom: 2rem;
+  color: #6c63ff;
+}
+
+/* Generic feedback text */
+.loading {
+  text-align: center;
+  color: #6c63ff;
+  font-weight: 500;
+}
+
+.error {
+  text-align: center;
+  color: #e74c3c;
+  font-weight: 500;
+}
+
+.no-results {
+  text-align: center;
+  color: #888;
+  font-style: italic;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 600px) {
+  .app-container {
+    padding: 1rem;
+  }
+
+  h1 {
+    font-size: 1.8rem;
+  }
+}
