@@ -1,0 +1,36 @@
+.job-card {
+  border: 1px solid #ddd;
+  padding: 1rem;
+  border-radius: 8px;
+  background-color: #fff;
+  text-align: left;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.job-card h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.2rem;
+}
+
+.job-card .company {
+  font-weight: bold;
+  color: #555;
+}
+
+.job-card .location {
+  font-style: italic;
+  color: #777;
+}
+
+.job-card .salary {
+  color: #28a745;
+  margin-top: 0.5rem;
+}
+
+.job-card a {
+  display: inline-block;
+  margin-top: 0.8rem;
+  color: #6c63ff;
+  text-decoration: none;
+  font-weight: 500;
+}

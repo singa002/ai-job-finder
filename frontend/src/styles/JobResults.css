@@ -1,0 +1,11 @@
+.job-results {
+  padding: 1rem;
+  text-align: center;
+}
+
+.job-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
