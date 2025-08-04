@@ -3,10 +3,19 @@ from flask_cors import CORS
 import re
 import logging
 
+# Import our job scraper
+from services.job_scraper import JobScraper
+
 app = Flask(__name__)
 CORS(app)
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 class AIReadyTextAnalyzer:
+    """Text analyzer designed for easy AI integration later"""
+    
     def __init__(self):
         self.known_job_patterns = {
             'Software Developer': ['developer', 'programming', 'coding', 'software engineer'],
@@ -38,18 +47,13 @@ class AIReadyTextAnalyzer:
         original_text = search_text
         search_text_lower = search_text.lower()
         
-        # Phase 1: Simple pattern analysis
         simple_result = self._simple_pattern_analysis(search_text_lower)
         
-        # Phase 2: AI enhancement decision point - FIXED LOGIC
         if simple_result['confidence'] < self.confidence_threshold:
             if self.ai_service:
-                # Future: enhanced_result = self._ai_enhanced_analysis(search_text)
                 pass
             else:
-                # Use fallback patterns when no AI service available
                 enhanced_result = self._fallback_analysis(search_text_lower)
-                # Merge fallback results
                 if enhanced_result.get('predicted_roles'):
                     simple_result['predicted_roles'] = enhanced_result['predicted_roles']
                     simple_result['confidence'] = max(simple_result['confidence'], 0.6)
@@ -59,7 +63,6 @@ class AIReadyTextAnalyzer:
         if 'analysis_method' not in simple_result:
             simple_result['analysis_method'] = 'pattern_matching'
         
-        # Add metadata
         simple_result.update({
             'original_query': original_text,
             'search_type': 'text_search',
@@ -115,7 +118,6 @@ class AIReadyTextAnalyzer:
         }
     
     def _extract_job_title_patterns(self, search_text):
-        # Extract meaningful words (exclude common terms)
         stop_words = ['looking', 'for', 'job', 'position', 'work', 'career', 'remote', 'part', 'time', 'full', 'flexible', 'schedule']
         words = [word for word in search_text.split() if word not in stop_words and len(word) > 2]
         
@@ -133,7 +135,9 @@ class AIReadyTextAnalyzer:
             'junior_level': any(term in search_text for term in ['junior', 'entry', 'new grad'])
         }
 
+# Initialize components
 text_analyzer = AIReadyTextAnalyzer()
+job_scraper = JobScraper()
 
 @app.route('/health', methods=['GET'])
 def health_check():
@@ -141,7 +145,8 @@ def health_check():
         "status": "healthy",
         "message": "AI Job Finder API is running",
         "version": "1.0.0",
-        "ai_ready": True
+        "ai_ready": True,
+        "job_scraper_ready": True
     })
 
 @app.route('/api/analyze-text', methods=['POST'])
@@ -166,6 +171,81 @@ def analyze_text():
     except Exception as e:
         logging.error(f"Error in text analysis: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+@app.route('/api/search-jobs', methods=['POST'])
+def search_jobs():
+    """NEW: Search for jobs using our job scraper"""
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({"error": "Request data is required"}), 400
+        
+        # Extract search parameters
+        keywords = data.get('keywords', '')
+        location = data.get('location', '')
+        analysis_data = data.get('analysis', {})
+        
+        # If we have analysis data, use it to generate better keywords
+        if analysis_data and not keywords:
+            if analysis_data.get('search_type') == 'text_search':
+                predicted_roles = analysis_data.get('predicted_roles', [])
+                keywords = predicted_roles[0] if predicted_roles else analysis_data.get('original_query', 'developer')
+            else:
+                keywords = 'software developer'
+        
+        if not keywords:
+            keywords = 'developer'  # Fallback
+        
+        # Search for jobs using our scraper
+        logger.info(f"Searching for jobs with keywords: '{keywords}', location: '{location}'")
+        jobs = job_scraper.search_jobs(keywords, location)
+        
+        return jsonify({
+            "success": True,
+            "jobs": jobs,
+            "total_found": len(jobs),
+            "search_keywords": keywords,
+            "message": f"Found {len(jobs)} job opportunities"
+        })
+    
+    except Exception as e:
+        logger.error(f"Error searching jobs: {str(e)}")
+        return jsonify({
+            "error": f"Job search failed: {str(e)}"
+        }), 500
+
+@app.route('/api/search-jobs-simple', methods=['POST'])
+def search_jobs_simple():
+    """Simple job search endpoint for direct keyword searches"""
+    try:
+        data = request.get_json()
+        
+        if not data or 'keywords' not in data:
+            return jsonify({"error": "keywords are required"}), 400
+        
+        keywords = data['keywords'].strip()
+        location = data.get('location', '').strip()
+        
+        if not keywords:
+            return jsonify({"error": "keywords cannot be empty"}), 400
+        
+        # Search for jobs
+        jobs = job_scraper.search_jobs(keywords, location)
+        
+        return jsonify({
+            "success": True,
+            "jobs": jobs,
+            "total_found": len(jobs),
+            "search_keywords": keywords,
+            "search_location": location
+        })
+    
+    except Exception as e:
+        logger.error(f"Error in simple job search: {str(e)}")
+        return jsonify({
+            "error": f"Job search failed: {str(e)}"
+        }), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5001)
