@@ -1,0 +1,1 @@
+// This file has been removed to prevent conflicts with types defined in App.tsx
