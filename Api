@@ -1,0 +1,81 @@
+from fastapi import FastAPI, HTTPException
+import requests
+
+app = FastAPI()
+
+ROBOT_HTTP = "http://166.147.161.155:8080"
+
+# -------------------------
+# GET MAP
+# -------------------------
+@app.get("/map")
+def get_map():
+    try:
+        res = requests.get(f"{ROBOT_HTTP}/map", timeout=5)
+        return res.json()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# -------------------------
+# GET STATE
+# -------------------------
+@app.get("/state")
+def get_state():
+    try:
+        res = requests.get(f"{ROBOT_HTTP}/state", timeout=5)
+        return res.json()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# -------------------------
+# MOVE ROBOT
+# -------------------------
+@app.post("/move")
+def move_robot(target_x: float, target_y: float):
+    try:
+        res = requests.post(
+            f"{ROBOT_HTTP}/chassis/move",
+            json={"target_x": target_x, "target_y": target_y},
+            timeout=5
+        )
+        return res.json()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# -------------------------
+# JACK UP
+# -------------------------
+@app.post("/jack-up")
+def jack_up():
+    try:
+        res = requests.post(f"{ROBOT_HTTP}/chassis/jack-up", timeout=5)
+        return res.json()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# -------------------------
+# JACK DOWN
+# -------------------------
+@app.post("/jack-down")
+def jack_down():
+    try:
+        res = requests.post(f"{ROBOT_HTTP}/chassis/jack-down", timeout=5)
+        return res.json()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# -------------------------
+# SEND HOME
+# -------------------------
+@app.post("/send-home")
+def send_home():
+    try:
+        res = requests.post(f"{ROBOT_HTTP}/chassis/send-home", timeout=5)
+        return res.json()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
