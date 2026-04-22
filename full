@@ -1,0 +1,170 @@
+import { useState, useEffect, useRef } from 'react';
+import './App.css'
+
+const BACKEND_URL = 'http://localhost:8080';
+const ROBOT_WS_URL = 'ws://166.154.72.193:8090';
+
+function App() {
+  const [telemetry, setTelemetry] = useState(null); //set state of the robot movements
+  const [connected, setConnected] = useState(false); //set state to stay connected
+  const [targetX, setTargetX] = useState(''); // set change of the positioning
+  const [targetY, setTargetY] = useState(''); // set 
+  const [state, setState] = useState(null); // GET State
+  const [map, setMap] = useState(null); // GET MAP
+  
+  // useFef prevents double connection
+  const socketRef = useRef(null);
+
+  useEffect(() => {
+    if (socketRef.current) return; // exit if already connecting/connected
+
+    const ws = new WebSocket(ROBOT_WS_URL);
+    socketRef.current = ws;
+
+    ws.onopen = () => {
+       console.log('connected to the WebSocket server!'); 
+      setConnected(true);
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        setTelemetry(data);
+      } catch (err) {
+        console.log('Not JSON:', event.data);
+      }
+    };
+
+
+    ws.onclose = () => {
+      console.log('Disconnected');
+      setConnected(false);
+      socketRef.current = null;
+    };
+
+    ws.onerror = (err) => {
+      console.error('WebSocket encountered an error:', err);
+      setConnected(false)
+    };
+    
+  
+    return () => {
+      if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+        ws.close();
+        socketRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+  fetch(`${BACKEND_URL}/state`)
+    .then(r => r.json())
+    .then(data => setState(data));
+
+  fetch(`${BACKEND_URL}/map`)
+    .then(r => r.json())
+    .then(data => setMap(data));
+}, []);
+
+  
+  //const sendHome = () => fetch(`${BACKEND_URL}/chassis/send-home`, { method: 'POST' });
+ // const jackUp = () => fetch(`${BACKEND_URL}/chassis/jack-up`, { method: 'POST' });
+  //const jackDown = () => fetch(`${BACKEND_URL}/chassis/jack-down`, { method: 'POST' });
+  
+ const sendHome = async () => {
+    const res = await fetch(`${BACKEND_URL}/chassis/send-home`, { method: 'POST' });
+    alert(JSON.stringify(await res.json()));
+  };
+
+  const jackUp = async () => {
+    const res = await fetch(`${BACKEND_URL}/chassis/jack-up`, { method: 'POST' });
+    alert(JSON.stringify(await res.json()));
+  };
+
+  const jackDown = async () => {
+    const res = await fetch(`${BACKEND_URL}/chassis/jack-down`, { method: 'POST' });
+    alert(JSON.stringify(await res.json()));
+  };
+
+const moveTo = async () => {
+  const url = `${BACKEND_URL}/chassis/moves?target_x=${targetX}&target_y=${targetY}`;
+
+  const res = await fetch(url, {
+    method: 'POST', 
+    headers: { 'Content-Type': 'application/json' }
+    
+  });
+
+  const data = await res.json();
+  alert(JSON.stringify(data));
+};
+
+  return (
+    <div style={{ padding: '20px', maxWidth: '600px', margin: 'auto', fontFamily: 'Courier New' }}>
+      <h1> Hello, my name is cherobo!🤖 </h1>
+
+      {/* dashboard */}
+      <div style={{ display: 'grid', gap: '10px', marginBottom: '20px' }}>
+        <Card label="Moving" value={telemetry?.moving ? 'Yes' : 'No'} />
+        <Card label="Jack" value={telemetry?.jacked_up ? 'Up' : 'Down'} />
+        <Card label="Battery" value={telemetry?.battery ? `${telemetry.battery}%` : '—'} />
+      </div>
+
+      {/* Pose Info */}
+      <div style={{ background: '#eee', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
+        <strong>Pose:</strong> X: {telemetry?.pose?.x.toFixed(2) ?? '—'} | Y: {telemetry?.pose?.y.toFixed(2) ?? '—'}
+      </div>
+
+      {/* Controls */}
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', margin: 'center', marginLeft: ''}}>
+        <button onClick={sendHome}>Home</button>
+        <button onClick={jackUp}>Jack Up</button>
+        <button onClick={jackDown}>Jack Down</button>
+      </div>
+
+
+      
+      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <input
+          type="number" placeholder="X" value={targetX}
+          onChange={e => setTargetX(e.target.value)}
+          style={{ width: '80px', padding: '8px', border: '1px solid #dee2e6', borderRadius: '6px' }}
+        />
+        <input
+          type="number" placeholder="Y" value={targetY}
+          onChange={e => setTargetY(e.target.value)}
+          style={{ width: '80px', padding: '8px', border: '1px solid #dee2e6', borderRadius: '6px' }}
+        />
+        <button className="btn" onClick={moveTo}>
+          Move Me
+        </button>
+      </div>
+
+      {/* State Info */}
+<div style={{ background: '#eee', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
+  <strong>State:</strong><br />
+  Battery: {state?.battery ?? '—'}% &nbsp;|&nbsp;
+  Online: {state?.online ? 'Yes' : 'No'} &nbsp;|&nbsp;
+  Moving: {state?.moving ? 'Yes' : 'No'}
+</div>
+
+{/* Map Info */}
+<div style={{ background: '#eee', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
+  <strong>Map:</strong><br />
+  Name: {map?.map_name ?? '—'} &nbsp;|&nbsp;
+  Version: {map?.map_version ?? '—'}
+</div>
+
+    </div> // end div
+  );
+}
+
+
+const Card = ({ label, value }) => (
+  <div style={{ background: '#f8f9fa', border: '1px solid #ddd', padding: '10px', borderRadius: '8px', textAlign: 'center' }}>
+    <small style={{ color: '#666' }}>{label}</small>
+    <div style={{ fontSize: '18px', fontWeight: 'bold' }}>{value}</div>
+  </div>
+);
+
+export default App;
